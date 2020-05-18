@@ -12,7 +12,7 @@ pylint:
   stage: Static Analysis
   allow_failure: true
   script:
-  - pylint -d C0301 .
+  - pylint -d C0301 ../help_project/
 
 unit_test:
   stage: Test
