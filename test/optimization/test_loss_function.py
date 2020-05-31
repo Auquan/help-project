@@ -1,4 +1,4 @@
-from src.optimization import loss_function
+from help_project.src.optimization import loss_function
 
 
 def test_pareto_first_update():

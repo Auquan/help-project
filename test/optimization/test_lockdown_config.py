@@ -1,4 +1,4 @@
-from src.optimization import lockdown_config
+from help_project.src.optimization import lockdown_config
 
 
 def test_kwargs_sample():

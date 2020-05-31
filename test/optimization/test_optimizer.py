@@ -1,6 +1,6 @@
-from src.optimization import lockdown_config
-from src.optimization import loss_function
-from src.optimization import optimizer
+from help_project.src.optimization import lockdown_config
+from help_project.src.optimization import loss_function
+from help_project.src.optimization import optimizer
 
 
 class MockHealthModel():

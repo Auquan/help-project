@@ -2,8 +2,8 @@
 import itertools
 import random
 
-from src.optimization import loss_function
-from src.optimization import lockdown_config
+from help_project.src.optimization import loss_function
+from help_project.src.optimization import lockdown_config
 
 
 class Optimizer():
