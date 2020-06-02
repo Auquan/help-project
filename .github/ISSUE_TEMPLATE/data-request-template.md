@@ -16,6 +16,8 @@ assignees: ''
 - [ ] csv
 - [ ] xlsx
 - [ ] pickle
+- [ ] Other
+- If Other option is selected, please mention the format
 #### Input Format (based on Data Source): 
 - [ ] HTML
 - [ ] PDF
