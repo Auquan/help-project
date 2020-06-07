@@ -70,4 +70,4 @@ class CountryParameters():
             self.recovered_cases['zone'] == country)])
         death = clean_df(self.recovered_cases[(
             self.recovered_cases['zone'] == country)])
-        return {"confirmed": conf, "recovered": reco, "deaths": death}
+        return conf, reco, death

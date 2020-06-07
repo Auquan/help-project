@@ -2,7 +2,6 @@
 This is the external API, that other teams can call
 '''
 from os import path
-import pandas as pd
 import git
 from src.disease_model.models.auquan_seir import AuquanSEIR
 from src.disease_model.utils.country_parameters import CountryParameters
@@ -33,6 +32,10 @@ class EnsembleModel():
 
     def get_health_status(self):
         """ output health_status of a country """
-        cases_df = pd.read_csv('data/full_data.csv')
-        cases_df = cases_df[cases_df['location'] == self.country]
-        return cases_df[['date', 'location', 'total_cases']]
+        model_classes = self.pick_models()
+        model_instances = []
+        for model in model_classes:
+            model_instance = model()
+            model_instance.fit(self.country_parameters)
+            model_instances.append(model_instance)
+        return model_instance.predict()
