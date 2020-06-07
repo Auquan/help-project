@@ -13,11 +13,10 @@ def test_ld_vec():
         ld_vec = exit_strat.get_lockdown_vectors()
         cls_len = len(exit_strat.get_focus_areas())
         df_len = len(ld_vec["category"].tolist())
+        if df_len == cls_len:
+            vec_created = True
     except Exception as inst:
         # TODO: change to logging
         print("exitstrategies test failed with exception:\n", inst)
-
-    if df_len == cls_len:
-        vec_created = True
 
     assert vec_created
