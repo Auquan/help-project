@@ -1,7 +1,11 @@
 '''
 This is the external API, that other teams can call
 '''
+from os import path
 import pandas as pd
+import git
+from src.disease_model.models.auquan_seir import AuquanSEIR
+from src.disease_model.utils.country_parameters import CountryParameters
 
 
 class EnsembleModel():
@@ -11,13 +15,21 @@ class EnsembleModel():
     """
 
     def __init__(self, country=None, lockdown_strategy=None):
+        if not path.exists("../data/COVID-19"):
+            git.Git(
+                "../data/").clone("https://github.com/CSSEGISandData/COVID-19.git")
         self.country = country
+        self.country_parameters = CountryParameters()
+        self.lockdown_strategy = lockdown_strategy
 
-    def pick_models(self, lockdown_strategy):
+    def pick_models(self):
         """
-        Function to pick what models to use for a particular lockdown strategy
+        Function to pick what models to use for a particular lockdown strategy,
+        using Auquan model by default for now
         """
-        return None
+        if self.lockdown_strategy:
+            pass
+        return [AuquanSEIR]
 
     def get_health_status(self):
         """ output health_status of a country """
