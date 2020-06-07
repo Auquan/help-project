@@ -250,7 +250,7 @@ class AuquanSEIR(BaseDiseaseModel):
                 df_death,
                 initial_time,
                 0),
-            workers=-1)  # In[238]:
+            workers=-1, updating='deferred')  # In[238]:
 
         susceptible, exposed, infected_unreported, \
             infected_reported, deaths, cured, cured_unreported, _ = \

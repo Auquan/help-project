@@ -1,6 +1,7 @@
 """
 Module for defining country parameters
 """
+from os import path
 import pandas as pd
 
 
@@ -18,8 +19,8 @@ def get_dfs():
     """
     Read number of deaths and infections from JHU data
     """
-
-    data_dir = '../data/COVID-19/csse_covid_19_data/csse_covid_19_time_series/'
+    dir_path = path.dirname(path.realpath(__file__))
+    data_dir = dir_path + '/../data/COVID-19/csse_covid_19_data/csse_covid_19_time_series/'
     rename = {'Country/Region': 'zone',
               'Province/State': 'sub_zone'}
     df_recovery = pd.read_csv(
@@ -38,8 +39,9 @@ def get_population():
     """
     Read population from population csv
     """
+    dir_path = path.dirname(path.realpath(__file__))
     population = pd.read_csv(
-        "../data/population-figures-by-country-csv_csv.csv")
+        dir_path + "/../data/population-figures-by-country-csv_csv.csv")
     population = population.set_index("Country")
     return population
 
@@ -52,13 +54,13 @@ class CountryParameters():
 
     def __init__(self):
         self.recovered_cases, self.deaths, self.confirmed_cases = get_dfs()
-        self.population = get_population()
+        self.population = get_population().Year_2016.to_dict()
 
     def get_population(self, country=None):
         """
         Population, Age_demographics
         """
-        return self.population.loc[country]
+        return self.population[country]
 
     def get_historical_infections(self, country=None):
         """

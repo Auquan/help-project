@@ -14,9 +14,10 @@ class EnsembleModel():
     """
 
     def __init__(self, country=None, lockdown_strategy=None):
-        if not path.exists("../data/COVID-19"):
+        dir_path = path.dirname(path.realpath(__file__))
+        if not path.exists(dir_path + "/../data/COVID-19"):
             git.Git(
-                "../data/").clone("https://github.com/CSSEGISandData/COVID-19.git")
+               dir_path+ "/../data/").clone("https://github.com/CSSEGISandData/COVID-19.git")
         self.country = country
         self.country_parameters = CountryParameters()
         self.lockdown_strategy = lockdown_strategy
@@ -35,7 +36,7 @@ class EnsembleModel():
         model_classes = self.pick_models()
         model_instances = []
         for model in model_classes:
-            model_instance = model()
+            model_instance = model(country=self.country)
             model_instance.fit(self.country_parameters)
             model_instances.append(model_instance)
         return model_instance.predict()
