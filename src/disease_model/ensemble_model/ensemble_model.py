@@ -5,14 +5,19 @@ import pandas as pd
 
 
 class EnsembleModel():
-    def __init__(self, country = None, lockdown_strategy = None):
-        self.models = self.pickModels(lockdown_strategy)
+
+    """
+    Class for Ensemble model
+    """
+
+    def __init__(self, country=None, lockdown_strategy=None):
         self.country = country
 
-    def pickModels(self,lockdown_strategy):
+    def pick_models(self, lockdown_strategy):
         """
         Function to pick what models to use for a particular lockdown strategy
         """
+        return None
 
     def get_health_status(self):
         """ output health_status of a country """

@@ -2,21 +2,23 @@
 Base Class for all models
 '''
 
-import pandas as pd
 
+class BaseDiseaseModel():
 
-class BaseDiseaseModel(object):
+    """
+    Base Disease Model Class
+    """
+
     def __init__(self, country=None):
         self.country = country
         self.params = {}
 
-
-    def fit(self, CountryParameters):
+    def fit(self, country_parameters):
         """
         function to fit to a Country
         """
 
-    def set_params(self,params):
+    def set_params(self, params):
         """
         Setter for params
         """
