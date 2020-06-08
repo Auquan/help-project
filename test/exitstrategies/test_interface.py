@@ -24,7 +24,7 @@ def test_strat_dict():
         # Print to file if required
         if print_output_files:
             folder_name = dirname(dirname(__file__))
-            folder_name = join(folder_name, "exitstrategies")
+            folder_name = join(join(folder_name, "exitstrategies"), "output")
             file_name = strat_id + "_output.csv"
             file_path = join(folder_name, file_name)
             print("\n Printing output to:", file_path)
