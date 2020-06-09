@@ -27,7 +27,6 @@ def test_strat_dict():
             folder_name = join(join(folder_name, "exitstrategies"), "output")
             file_name = strat_id + "_output.csv"
             file_path = join(folder_name, file_name)
-            print("\n Printing output to:", file_path)
             strat_df.to_csv(file_path)
 
         # Set flag to pass test

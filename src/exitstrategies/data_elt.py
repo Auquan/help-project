@@ -27,20 +27,16 @@ class DataELT():
             if ".csv" in file_name:
                 # Load file
                 file_path = join(data_folder, file_name)
-                print("\n\nfile_path =", file_path)
                 file_df = pd.read_csv(file_path, encoding="utf-8")
 
                 # Create list of dates
                 date_array = file_df.columns.values
-                date_list = list(filter(lambda x: x != date_array[0], date_array.tolist()))
+                date_list = [date_value for date_value in date_array if date_value != date_array[0]]
                 date_list.sort()
 
                 # Save dataframe to dict
                 ld_df = self.create_lockdown_df(file_df, date_list, start_date)
                 strat_df = ld_df.transpose()
-                print("<<<<<<<<<<<<< PRINTING strat_df HERE >>>>>>>>>>>>>")
-                print(strat_df.head())
-                print("<<<<<<<<<<<<< COMPLETED PRINT >>>>>>>>>>>>>")
                 strat_id = file_name.replace(".csv", "")
                 strat_dict[strat_id] = strat_df
 
@@ -74,6 +70,7 @@ class DataELT():
             prev_date = impl_date
             prev_date_str = date_str
 
+        # Update index as column names to prevent wrong index in subsequent transpose operation (see extract_data())
         ld_cols = ld_df.columns.values
         ld_df.set_index(ld_cols[0], inplace=True)
 
