@@ -3,6 +3,7 @@ Module for defining country parameters
 """
 from os import path
 import pandas as pd
+import git
 
 
 def clean_df(df):
@@ -53,6 +54,10 @@ class CountryParameters():
     """
 
     def __init__(self):
+        dir_path = path.dirname(path.realpath(__file__))
+        if not path.exists(dir_path + "/../data/COVID-19"):
+            git.Git(
+                dir_path + "/../data/").clone("https://github.com/CSSEGISandData/COVID-19.git")
         self.recovered_cases, self.deaths, self.confirmed_cases = get_dfs()
         self.population = get_population().Year_2016.to_dict()
 

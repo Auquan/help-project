@@ -3,8 +3,8 @@ This is the external API, that other teams can call
 '''
 from os import path
 import git
-from src.disease_model.models.auquan_seir import AuquanSEIR
-from src.disease_model.utils.country_parameters import CountryParameters
+from help_project.src.disease_model.models.auquan_seir import AuquanSEIR
+from help_project.src.disease_model.utils.country_parameters import CountryParameters
 
 
 class EnsembleModel():
@@ -14,10 +14,6 @@ class EnsembleModel():
     """
 
     def __init__(self, country=None, lockdown_strategy=None):
-        dir_path = path.dirname(path.realpath(__file__))
-        if not path.exists(dir_path + "/../data/COVID-19"):
-            git.Git(
-               dir_path+ "/../data/").clone("https://github.com/CSSEGISandData/COVID-19.git")
         self.country = country
         self.country_parameters = CountryParameters()
         self.lockdown_strategy = lockdown_strategy
