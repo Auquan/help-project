@@ -7,7 +7,7 @@ from scipy.integrate import odeint
 import numpy as np
 import pandas as pd
 
-from src.disease_model.models.base_model import BaseDiseaseModel
+from help_project.src.disease_model.models.base_model import BaseDiseaseModel
 
 
 def sier_deriv(

@@ -1,8 +1,7 @@
 '''
 This is the external API, that other teams can call
 '''
-from os import path
-import git
+
 from help_project.src.disease_model.models.auquan_seir import AuquanSEIR
 from help_project.src.disease_model.utils.country_parameters import CountryParameters
 
