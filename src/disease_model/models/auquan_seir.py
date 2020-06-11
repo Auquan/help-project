@@ -2,15 +2,15 @@
 Module for Infections Models
 """
 
+from scipy import integrate
 from scipy import optimize
-from scipy.integrate import odeint
 import numpy as np
 import pandas as pd
 
-from help_project.src.disease_model.models.base_model import BaseDiseaseModel
+from help_project.src.disease_model import base_model
 
 
-def sier_deriv(
+def seir_deriv(
         initial_y,
         intial_t,
         population,
@@ -95,8 +95,8 @@ def setup_seir(
     timegrid = np.linspace(0, forward_period, forward_period)
 
     # Integrate the SIR equations over the time grid, t.
-    ret = odeint(
-        sier_deriv,
+    ret = integrate.odeint(
+        seir_deriv,
         initial_y,
         timegrid,
         args=(
@@ -165,7 +165,7 @@ def resid_seir_global(params, *args):
                                           true_deaths.iloc[-fit_days:])) + 0)).astype(float)))
 
 
-class AuquanSEIR(BaseDiseaseModel):
+class AuquanSEIR(base_model.BaseDiseaseModel):
     """
     class for Auquan's Infection Model
     """
