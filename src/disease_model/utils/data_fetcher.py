@@ -6,12 +6,12 @@ import pandas as pd
 from help_project.src.disease_model import data
 
 
-def clean_df(df):
+def clean_df(health_df):
     """Cleans the dataframe."""
-    df = df.sum(axis=0)
-    df = df[[d for d in df.index if d.find('/') > 0]].T
-    df.index = pd.to_datetime(df.index)
-    return df
+    health_df = health_df.sum(axis=0)
+    health_df = health_df[[d for d in health_df.index if d.find('/') > 0]].T
+    health_df.index = pd.to_datetime(health_df.index)
+    return health_df
 
 
 def get_dfs():

@@ -13,6 +13,7 @@ class EnsembleModel(base_model.BaseDiseaseModel):
     def __init__(
             self,
             models: Optional[Sequence[base_model.BaseDiseaseModel]] = None):
+        super().__init__()
         if not models:
             models = [auquan_seir.AuquanSEIR()]
         self.models = list(models)
