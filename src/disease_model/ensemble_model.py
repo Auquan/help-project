@@ -1,37 +1,59 @@
-'''
-This is the external API, that other teams can call
-'''
+"""This is the external API, that other teams can call."""
+from typing import Optional
+from typing import Sequence
 
+from help_project.src.disease_model import base_model
+from help_project.src.disease_model import data
 from help_project.src.disease_model.models import auquan_seir
-from help_project.src.disease_model.utils import country_parameters
 
 
-class EnsembleModel():
+class EnsembleModel(base_model.BaseDiseaseModel):
+    """Class for Ensemble model."""
 
-    """
-    Class for Ensemble model
-    """
+    def __init__(
+            self,
+            models: Optional[Sequence[base_model.BaseDiseaseModel]] = None):
+        if not models:
+            models = [auquan_seir.AuquanSEIR()]
+        self.models = list(models)
 
-    def __init__(self, country=None, lockdown_strategy=None):
-        self.country = country
-        self.country_parameters = country_parameters.CountryParameters()
-        self.lockdown_strategy = lockdown_strategy
+    def fit(self,
+            population_data: data.PopulationData,
+            health_data: data.HealthData,
+            policy_data: data.PolicyData):
+        """Fit the model to the given data.
 
-    def pick_models(self):
+        Args:
+            population_data: Relevant data for the population of interest.
+            health_data: Time-series of confirmed infections and deaths.
+            policy_data: Time-series of lockdown policy applied.
         """
-        Function to pick what models to use for a particular lockdown strategy,
-        using Auquan model by default for now
-        """
-        if self.lockdown_strategy:
-            pass
-        return [auquan_seir.AuquanSEIR]
+        for model in self.models:
+            model.fit(population_data, health_data, policy_data)
 
-    def get_health_status(self):
-        """ output health_status of a country """
-        model_classes = self.pick_models()
-        model_instances = []
-        for model in model_classes:
-            model_instance = model(country=self.country)
-            model_instance.fit(self.country_parameters)
-            model_instances.append(model_instance)
-        return model_instance.predict()
+    def predict(self,
+                past_health_data: data.HealthData,
+                future_policy_data: data.PolicyData) -> data.HealthData:
+        """Get predictions.
+
+        Args:
+            past_health_data: Time-series of confirmed infections and deaths.
+            future_policy_data: Time-series of lockdown policy to predict for.
+
+        Returns:
+            Averaged predictions of time-series of health data matching the
+            length of the given policy.
+        """
+        predictions = [model.predict(past_health_data, future_policy_data)
+                       for model in self.models]
+        return data.HealthData(
+            confirmed_cases=(
+                sum([p.confirmed_cases for p in predictions]) /
+                len(predictions)),
+            recovered=(
+                sum([p.recovered for p in predictions]) /
+                len(predictions)),
+            deaths=(
+                sum([p.deaths for p in predictions]) /
+                len(predictions)),
+        )

@@ -1,34 +1,49 @@
-'''
-Base Class for all models
-'''
+"""Base class for all models."""
+import copy
+from typing import Dict
+
+from help_project.src.disease_model import data
 
 
-class BaseDiseaseModel():
+class BaseDiseaseModel:
+    """Base Disease Model for other models to inherit from."""
 
-    """
-    Base Disease Model Class
-    """
-
-    def __init__(self, country=None):
-        self.country = country
+    def __init__(self):
+        """Initialize the model."""
         self.params = {}
 
-    def fit(self, country_parameters):
-        """
-        function to fit to a Country
-        """
+    def fit(self,
+            population_data: data.PopulationData,
+            health_data: data.HealthData,
+            policy_data: data.PolicyData):
+        """Fit the model to the given data.
 
-    def set_params(self, params):
+        Args:
+            population_data: Relevant data for the population of interest.
+            health_data: Time-series of confirmed infections and deaths.
+            policy_data: Time-series of lockdown policy applied.
         """
-        Setter for params
-        """
+        raise NotImplementedError()
 
-    def get_params(self):
-        """
-        getter for params
-        """
+    def set_params(self, params: Dict):
+        """Setter for params."""
+        self.params = copy.deepcopy(params)
 
-    def make_predictions(self):
+    def get_params(self) -> Dict:
+        """Getter for params."""
+        return copy.deepcopy(self.params)
+
+    def predict(self,
+                past_health_data: data.PopulationData,
+                future_policy_data: data.PolicyData) -> data.HealthData:
+        """Get predictions.
+
+        Args:
+            past_health_data: Time-series of confirmed infections and deaths.
+            future_policy_data: Time-series of lockdown policy to predict for.
+
+        Returns:
+            Predicted time-series of health data matching the length of the
+            given policy.
         """
-        predictions
-        """
+        raise NotImplementedError()

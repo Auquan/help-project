@@ -1,13 +1,11 @@
-"""
-Module for Infections Models
-"""
-
-from scipy import integrate
-from scipy import optimize
+"""Module for Auquan Infection Model."""
 import numpy as np
 import pandas as pd
+from scipy import integrate
+from scipy import optimize
 
 from help_project.src.disease_model import base_model
+from help_project.src.disease_model import data
 
 
 def seir_deriv(
@@ -20,9 +18,7 @@ def seir_deriv(
         delta,
         zeta,
         ccfr):
-    """
-    function to define the differential euqations for the model
-    """
+    """Differential equations for the model."""
     incubation_period = 5
     eta = 1 / 14
     epsilon = (1 / incubation_period) - alpha
@@ -60,10 +56,7 @@ def setup_seir(
         initial_time,
         forward,
         generating_curve=False):
-    """
-    This function is for the setup of the model,
-    given parameters this tries to integrate the curves
-    """
+    """Tries to integrate the SEIR curves."""
     if generating_curve:
         deaths0 = df_death.iloc[-1]
         try:
@@ -142,9 +135,7 @@ def resid_seir(
 
 
 def resid_seir_global(params, *args):
-    """
-    residue function for global optimization
-    """
+    """Residue function for global optimization."""
     population, df_conf, df_reco, df_death, initial_time, ccfr = args
     susceptible, exposed, infected_unreported, \
         infected_reported, deaths, cured, cured_unreported0, _ = \
@@ -166,28 +157,36 @@ def resid_seir_global(params, *args):
 
 
 class AuquanSEIR(base_model.BaseDiseaseModel):
-    """
-    class for Auquan's Infection Model
-    """
+    """Class for Auquan's Infection Model."""
 
-    def __init__(
-            self,
-            country=None,
-            fit_on_days=14,
-            fit_from_last_death=False):
-        self.country = country
+    def __init__(self,
+                 fit_on_days: int = 14,
+                 fit_from_last_death: bool = False):
+        """Initialize the Auquan model.
+
+        Args:
+            fit_on_days: Number of days to fit the model on.
+            fit_from_last_death: TODO (Verify this logic)
+        """
         self.fit_on_days = fit_on_days
         self.fit_from_last_death = fit_from_last_death
 
-    def fit(self, country_parameters):
+    def fit(self,
+            population_data: data.PopulationData,
+            health_data: data.HealthData,
+            policy_data: data.PolicyData):
+        """Fit the model to the given data.
+
+        Args:
+            population_data: Relevant data for the population of interest.
+            health_data: Time-series of confirmed infections and deaths.
+            policy_data: Time-series of lockdown policy applied.
         """
-        fits the model
-        """
-        population = country_parameters.get_population(self.country)
-        population = int(population)
+        population = population_data.population_size
         self.population = population
-        df_conf, df_reco, df_death = country_parameters.get_historical_infections(
-            self.country)
+        df_conf = health_data.confirmed_cases
+        df_reco = health_data.recovered
+        df_death = health_data.deaths
 
         if self.fit_from_last_death:
             fit_on_days = len(df_death[df_death > 0])
@@ -261,18 +260,26 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
                        population, df_conf, df_reco, df_death, initial_time, 0)
 
         self.set_params({
-            "res": res['x'],
-            "startE": exposed[-1],
-            "startS": susceptible[-1],
-            "startIu": infected_unreported[-1],
-            "startCu": cured_unreported[-1],
-            "initial_time": initial_time
+            'res': res['x'],
+            'startE': exposed[-1],
+            'startS': susceptible[-1],
+            'startIu': infected_unreported[-1],
+            'startCu': cured_unreported[-1],
+            'initial_time': initial_time
         })
 
-    def predict(self):
-        """
-        predict future infections using pre learned
-        parameters
+    def predict(self,
+                past_health_data: data.HealthData,
+                future_policy_data: data.PolicyData) -> data.HealthData:
+        """Get predictions.
+
+        Args:
+            past_health_data: Time-series of confirmed infections and deaths.
+            future_policy_data: Time-series of lockdown policy to predict for.
+
+        Returns:
+            Predicted time-series of health data matching the length of the
+            given policy.
         """
         s_long, e_long, iu_long, ir_long, \
             d_long, c_long, cu_long, _ = \
@@ -284,17 +291,16 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
                        self.df_conf, self.df_reco, self.df_death, self.params['initial_time'], 150,
                        generating_curve=True)
 
-        dates = pd.date_range(
-            start=self.df_death.index[-1], periods=len(ir_long))
-        final_df = pd.DataFrame()
-        final_df['DATE'] = dates
-        final_df['Deaths'] = pd.Series(d_long)
-        final_df['Confirmed Infections'] = pd.Series(ir_long + c_long + d_long)
-        final_df['Active Infections'] = pd.Series(ir_long)
-        return final_df
-
-    def set_params(self, params):
-        """
-        parameter setter
-        """
-        self.params = params
+        # dates = pd.date_range(
+        #     start=self.df_death.index[-1], periods=len(ir_long))
+        # final_df = pd.DataFrame()
+        # final_df['DATE'] = dates
+        # final_df['Deaths'] = pd.Series(d_long)
+        # final_df['Confirmed Infections'] = pd.Series(ir_long + c_long + d_long)
+        # final_df['Active Infections'] = pd.Series(ir_long)
+        # return final_df
+        return data.HealthData(
+            confirmed_cases=pd.Series(ir_long),
+            recovered=pd.Series(c_long),
+            deaths=pd.Series(d_long),
+        )
