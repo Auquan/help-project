@@ -1,7 +1,8 @@
 """Simple SIR model."""
+from typing import Tuple
+
 import numpy as np
 from scipy import integrate
-from typing import Tuple
 
 from help_project.src.disease_model import base_model
 from help_project.src.disease_model import data
