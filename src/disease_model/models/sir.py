@@ -54,12 +54,11 @@ class SIR(base_model.BaseDiseaseModel):
         })
 
     def predict(self,
-                past_health_data: data.PopulationData,
+                past_health_data: data.HealthData,
                 future_policy_data: data.PolicyData) -> data.HealthData:
         """Get predictions.
 
         Args:
-            population_data: Relevant data for the population of interest.
             past_health_data: Time-series of confirmed infections and deaths.
             future_policy_data: Time-series of lockdown policy to predict for.
 
