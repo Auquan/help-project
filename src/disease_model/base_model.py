@@ -34,7 +34,7 @@ class BaseDiseaseModel:
         return copy.deepcopy(self.params)
 
     def predict(self,
-                past_health_data: data.PopulationData,
+                past_health_data: data.HealthData,
                 future_policy_data: data.PolicyData) -> data.HealthData:
         """Get predictions.
 
