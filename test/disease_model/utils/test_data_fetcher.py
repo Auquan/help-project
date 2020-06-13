@@ -6,10 +6,12 @@ def test_initialize():
     """Test that the initializer works."""
     data_fetcher.DataFetcher()
 
+
 def test_get_countries():
     """Test that it works and returns an appropriate number of results."""
     fetcher = data_fetcher.DataFetcher()
     assert 200 < len(fetcher.get_countries()) < 300
+
 
 def test_get_population_data():
     """Test that it works and returns an appropriate number."""

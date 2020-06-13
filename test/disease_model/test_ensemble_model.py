@@ -43,13 +43,14 @@ def test_ensemble_model_predict_averages_all_submodules():
     submodel_1.predict = mock.MagicMock(return_value=result_1)
     submodel_2.predict = mock.MagicMock(return_value=result_2)
     ensemble = ensemble_model.EnsembleModel([submodel_1, submodel_2])
-    result = ensemble.predict(None, None)
+    result = ensemble.predict(None, None, None)
 
     assert np.array_equal(result.confirmed_cases, expected.confirmed_cases)
     assert np.array_equal(result.recovered, expected.recovered)
     assert np.array_equal(result.deaths, expected.deaths)
-    submodel_1.predict.assert_called_once_with(None, None)
-    submodel_2.predict.assert_called_once_with(None, None)
+    submodel_1.predict.assert_called_once_with(None, None, None)
+    submodel_2.predict.assert_called_once_with(None, None, None)
+
 
 def test_ensemble_model_runs_without_failure():
     """Ensure ensemble model runs end-to-end without failure."""
@@ -60,7 +61,7 @@ def test_ensemble_model_runs_without_failure():
 
     model = ensemble_model.EnsembleModel()
     model.fit(population_data, health_data, None)
-    health_output = model.predict(health_data, None)
+    health_output = model.predict(population_data, health_data, None)
     assert health_output is not None
     assert len(health_output.confirmed_cases) > 0
     assert len(health_output.recovered) > 0

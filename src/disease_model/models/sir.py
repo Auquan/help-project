@@ -3,6 +3,7 @@ from typing import Tuple
 
 import numpy as np
 from scipy import integrate
+from scipy import optimize
 
 from help_project.src.disease_model import base_model
 from help_project.src.disease_model import data
@@ -35,6 +36,32 @@ class SIR(base_model.BaseDiseaseModel):
         dr = gamma * i
         return ds, di, dr
 
+    @classmethod
+    def residue(cls, params, population_data, health_data, policy_data):
+        """Residue for a solution to the model.
+
+        Args:
+            params: The chosen params to try, consisting of (beta, gamma).
+            population_data: Relevant data for the population of interest.
+            health_data: Time-series of confirmed infections and deaths.
+            policy_data: Time-series of lockdown policy applied.
+
+        Returns:
+            Mean Square Error for the time series of the health data.
+        """
+        model = SIR()
+        model.set_params({
+            'beta': params[0],
+            'gamma': params[1],
+        })
+        predictions = model.predict(population_data, health_data, policy_data)
+        deltas = [
+            predictions.confirmed_cases - health_data.confirmed_cases,
+            predictions.recovered - health_data.recovered,
+            predictions.deaths - health_data.deaths,
+        ]
+        return sum([np.square(d).mean() for d in deltas])
+
     def fit(self,
             population_data: data.PopulationData,
             health_data: data.HealthData,
@@ -46,19 +73,34 @@ class SIR(base_model.BaseDiseaseModel):
             health_data: Time-series of confirmed infections and deaths.
             policy_data: Time-series of lockdown policy applied.
         """
-        #TODO (Consider input data)
-        self.set_params({
-            'beta': 0.5,
-            'gamma': 0.1,
-            'population': population_data.population_size,
-        })
+        result = optimize.differential_evolution(
+            SIR.residue,
+            bounds=[
+                [0.05, 5],  # beta
+                [1/30, 1/5],  # gamma
+            ],
+            args=(population_data,
+                  health_data,
+                  policy_data),
+            workers=-1,
+            updating='deferred',
+        )
+
+        if result.success:
+            self.set_params({
+                'beta': result.x[0],
+                'gamma': result.x[1],
+            })
+        return result.success
 
     def predict(self,
+                population_data: data.PopulationData,
                 past_health_data: data.HealthData,
                 future_policy_data: data.PolicyData) -> data.HealthData:
         """Get predictions.
 
         Args:
+            population_data: Relevant data for the population of interest.
             past_health_data: Time-series of confirmed infections and deaths.
             future_policy_data: Time-series of lockdown policy to predict for.
 
@@ -74,7 +116,7 @@ class SIR(base_model.BaseDiseaseModel):
         initial_recovered = past_health_data.recovered[0]
         initial_deaths = past_health_data.deaths[0]
 
-        initial_population = self.params['population'] - initial_deaths
+        initial_population = population_data.population_size - initial_deaths
         initial_susceptible = initial_population - (initial_confirmed_cases +
                                                     initial_recovered)
 

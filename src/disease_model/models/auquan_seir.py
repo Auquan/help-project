@@ -183,7 +183,6 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
             policy_data: Time-series of lockdown policy applied.
         """
         population = population_data.population_size
-        self.population = population
         df_conf = health_data.confirmed_cases
         df_reco = health_data.recovered
         df_death = health_data.deaths
@@ -269,11 +268,13 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
         })
 
     def predict(self,
+                population_data: data.PopulationData,
                 past_health_data: data.HealthData,
                 future_policy_data: data.PolicyData) -> data.HealthData:
         """Get predictions.
 
         Args:
+            population_data: Relevant data for the population of interest.
             past_health_data: Time-series of confirmed infections and deaths.
             future_policy_data: Time-series of lockdown policy to predict for.
 
@@ -287,7 +288,7 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
                        self.params['res'][2], self.params['res'][3],
                        self.params['res'][4], self.params['res'][5],
                        self.params['startE'], .1 * self.params['startIu'],
-                       self.params['startS'], self.params['startIu'], self.population,
+                       self.params['startS'], self.params['startIu'], population_data.population_size,
                        self.df_conf, self.df_reco, self.df_death, self.params['initial_time'], 150,
                        generating_curve=True)
 

@@ -33,11 +33,13 @@ class EnsembleModel(base_model.BaseDiseaseModel):
             model.fit(population_data, health_data, policy_data)
 
     def predict(self,
+                population_data: data.PopulationData,
                 past_health_data: data.HealthData,
                 future_policy_data: data.PolicyData) -> data.HealthData:
         """Get predictions.
 
         Args:
+            population_data: Relevant data for the population of interest.
             past_health_data: Time-series of confirmed infections and deaths.
             future_policy_data: Time-series of lockdown policy to predict for.
 
@@ -45,8 +47,11 @@ class EnsembleModel(base_model.BaseDiseaseModel):
             Averaged predictions of time-series of health data matching the
             length of the given policy.
         """
-        predictions = [model.predict(past_health_data, future_policy_data)
-                       for model in self.models]
+        predictions = [
+            model.predict(
+                population_data, past_health_data, future_policy_data)
+            for model in self.models
+        ]
         return data.HealthData(
             confirmed_cases=(
                 sum([p.confirmed_cases for p in predictions]) /
