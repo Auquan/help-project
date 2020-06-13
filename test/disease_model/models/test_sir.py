@@ -99,4 +99,5 @@ def test_fit():
                   ground_truth_predictions,
                   policy)
 
+    # An approximate match would also be fine here.
     assert sir_model.params == ground_truth_params

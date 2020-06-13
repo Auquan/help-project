@@ -10,7 +10,15 @@ from help_project.src.disease_model import data
 
 
 class SIR(base_model.BaseDiseaseModel):
-    """Base Disease Model for other models to inherit from."""
+    """Simple compartment model with only three compartments.
+
+    S: Susceptible
+    I: Infectious
+    R: Recovered
+
+    It assumes that recovered people cannot contract the disease again and
+    does not account for birth rate or mortality rate.
+    """
 
     @classmethod
     def differential_equations(
