@@ -1,0 +1,70 @@
+"""Test the sir module."""
+from help_project.src.disease_model import data
+from help_project.src.disease_model.models import sir
+
+
+def test_predict_with_no_cases():
+    """Test that the predict function makes sense."""
+    population_data = data.PopulationData(
+        population_size=1e6,
+        demographics=None,
+    )
+    sir_model = sir.SIR()
+    sir_model.set_params({
+        'beta': 2,
+        'gamma': 0.1,
+        'population': population_data.population_size,
+    })
+
+    health_data = data.HealthData(
+        confirmed_cases=[0],
+        recovered=[0],
+        deaths=[0],
+    )
+    expected_prediction_size = 10
+    future_policy = data.PolicyData(lockdown=[0] * expected_prediction_size)
+    predictions = sir_model.predict(health_data, future_policy)
+
+    # Dimensions must match the given policy
+    print(predictions)
+    assert len(predictions.confirmed_cases) == expected_prediction_size
+    assert len(predictions.recovered) == expected_prediction_size
+    assert len(predictions.deaths) == expected_prediction_size
+
+    # Values should all be zero since there were no cases to begin with
+    assert all(predictions.confirmed_cases == 0)
+    assert all(predictions.recovered == 0)
+    assert all(predictions.deaths == 0)
+
+
+def test_predict_with_some_cases():
+    """Test that the predict function makes sense."""
+    population_data = data.PopulationData(
+        population_size=1e6,
+        demographics=None,
+    )
+    sir_model = sir.SIR()
+    sir_model.set_params({
+        'beta': 2,
+        'gamma': 0.1,
+        'population': population_data.population_size,
+    })
+
+    health_data = data.HealthData(
+        confirmed_cases=[100],
+        recovered=[0],
+        deaths=[0],
+    )
+    expected_prediction_size = 2
+    future_policy = data.PolicyData(lockdown=[0] * expected_prediction_size)
+    predictions = sir_model.predict(health_data, future_policy)
+
+    # Dimensions must match the given policy
+    assert len(predictions.confirmed_cases) == expected_prediction_size
+    assert len(predictions.recovered) == expected_prediction_size
+    assert len(predictions.deaths) == expected_prediction_size
+
+    # Values should make sense
+    assert predictions.confirmed_cases[1] > predictions.confirmed_cases[0]
+    assert predictions.recovered[1] > predictions.recovered[0]
+    assert all(predictions.deaths == 0)
