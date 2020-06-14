@@ -21,16 +21,19 @@ class EnsembleModel(base_model.BaseDiseaseModel):
     def fit(self,
             population_data: data.PopulationData,
             health_data: data.HealthData,
-            policy_data: data.PolicyData):
+            policy_data: data.PolicyData) -> bool:
         """Fit the model to the given data.
 
         Args:
             population_data: Relevant data for the population of interest.
             health_data: Time-series of confirmed infections and deaths.
             policy_data: Time-series of lockdown policy applied.
+
+        Returns:
+            Whether the optimization was succesful for all models.
         """
-        for model in self.models:
-            model.fit(population_data, health_data, policy_data)
+        return all(model.fit(population_data, health_data, policy_data)
+                   for model in self.models)
 
     def predict(self,
                 population_data: data.PopulationData,

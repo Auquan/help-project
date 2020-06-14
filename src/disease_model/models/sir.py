@@ -7,49 +7,85 @@ from scipy import optimize
 
 from help_project.src.disease_model import base_model
 from help_project.src.disease_model import data
+from help_project.src.disease_model import parameter
 
 
 class SIR(base_model.BaseDiseaseModel):
-    """Simple compartment model with only three compartments.
+    """Simple compartment model.
 
-    S: Susceptible
-    I: Infectious
-    R: Recovered
+    Compartments:
+    - S: Susceptible
+    - I: Infectious
+    - R: Recovered
+    - D: Dead
 
-    It assumes that recovered people cannot contract the disease again and
-    does not account for birth rate or mortality rate.
+    It assumes that recovered people cannot contract the disease again.
     """
 
-    @classmethod
+    DEFAULT_PARAMETER_CONFIG = parameter.ParameterConfig(
+        parameter.Parameter(name='beta',
+                            description='Infection rate',
+                            bounds=[0, 10]),
+        parameter.Parameter(name='gamma',
+                            description='Recovery rate',
+                            bounds=[1/30, 1/5]),
+        parameter.Parameter(name='b',
+                            description='Birth rate',
+                            bounds=[0, 1/2]),
+        parameter.Parameter(name='mu',
+                            description='Base mortality rate',
+                            bounds=[1/365/30, 1/365/90]),
+        parameter.Parameter(name='mu_i',
+                            description='Infected mortality rate',
+                            bounds=[1/30, 1/5]),
+        parameter.Parameter(name='cfr',
+                            description='Case fatality rate',
+                            bounds=[0, 0.05])
+    )
+
+    def __init__(self, parameter_config=None):
+        super().__init__(parameter_config or SIR.DEFAULT_PARAMETER_CONFIG)
+
     def differential_equations(
-            cls, _,
+            self, _,
             compartments: Tuple[float, float, float],
-            beta: float,
-            gamma: float):
+            *args: Tuple[float, ...]):
         """Differential equations for this model.
 
         Args:
             _: Timestep, which is not used.
             compartments: Tuple of population in each compartment (S, I, R).
-            beta: Infection rate.
-            gamma: Recovery rate.
+            *args: Parameters used for the equations as a Tuple.
 
         Returns:
             Derivatives for each compartment.
         """
-        # pylint: disable=invalid-name
-        s, i, r = compartments
-        ds = -beta * i / (s + i + r) * s
-        di = beta * i / (s + i + r) * s - gamma * i
-        dr = gamma * i
-        return ds, di, dr
+        # pylint: disable=invalid-name,too-many-locals
+        s, i, r, _ = compartments
+        population = s + i + r
+        parameters = self.parameter_config.parse(args)
+        beta = parameters['beta']
+        gamma = parameters['gamma']
+        b = parameters['b']
+        mu = parameters['mu']
+        mu_i = parameters['mu_i']
+        cfr = parameters['cfr']
 
-    @classmethod
-    def residue(cls, params, population_data, health_data, policy_data):
+        ds = (-beta * i / population + b - mu) * s
+        di = (beta * s / population - gamma * (1 - cfr) - mu_i * cfr - mu) * i
+        dr = gamma * (1 - cfr) * i - mu * r
+        dd = mu_i * cfr * i
+        return ds, di, dr, dd
+
+    def residue(self,
+                params: Tuple[float, ...],
+                population_data: data.PopulationData,
+                health_data: data.HealthData,
+                policy_data: data.PolicyData):
         """Residue for a solution to the model.
 
         Args:
-            params: The chosen params to try, consisting of (beta, gamma).
+            params: The chosen params to try.
             population_data: Relevant data for the population of interest.
             health_data: Time-series of confirmed infections and deaths.
             policy_data: Time-series of lockdown policy applied.
@@ -57,11 +93,8 @@ class SIR(base_model.BaseDiseaseModel):
         Returns:
             Mean Square Error for the time series of the health data.
         """
-        model = SIR()
-        model.set_params({
-            'beta': params[0],
-            'gamma': params[1],
-        })
+        model = SIR(self.parameter_config)
+        model.set_params(params)
         predictions = model.predict(population_data, health_data, policy_data)
         deltas = [
             predictions.confirmed_cases - health_data.confirmed_cases,
@@ -73,20 +106,20 @@ class SIR(base_model.BaseDiseaseModel):
     def fit(self,
             population_data: data.PopulationData,
             health_data: data.HealthData,
-            policy_data: data.PolicyData):
+            policy_data: data.PolicyData) -> bool:
         """Fit the model to the given data.
 
         Args:
             population_data: Relevant data for the population of interest.
             health_data: Time-series of confirmed infections and deaths.
             policy_data: Time-series of lockdown policy applied.
+
+        Returns:
+            Whether the optimization was successful in finding a solution.
         """
         result = optimize.differential_evolution(
-            SIR.residue,
-            bounds=[
-                [0.05, 5],  # beta
-                [1/30, 1/5],  # gamma
-            ],
+            self.residue,
+            bounds=[param.bounds for param in self.parameter_config],
             args=(population_data,
                   health_data,
                   policy_data),
@@ -95,10 +128,7 @@ class SIR(base_model.BaseDiseaseModel):
         )
 
         if result.success:
-            self.set_params({
-                'beta': result.x[0],
-                'gamma': result.x[1],
-            })
+            self.set_params(result.x)
         return result.success
 
     def predict(self,
@@ -116,33 +146,38 @@ class SIR(base_model.BaseDiseaseModel):
             Predicted time-series of health data matching the length of the
             given policy.
         """
-        if not self.params:
-            raise (
-                'Model params not set, call to fit function required.')
+        missing_params = [param.name for param in self.parameter_config
+                          if param.name not in self.params]
+        if missing_params:
+            raise RuntimeError(
+                'Model params not set (%s). '
+                'Fit the model or set them manually' % missing_params)
 
         initial_confirmed_cases = past_health_data.confirmed_cases[0]
         initial_recovered = past_health_data.recovered[0]
         initial_deaths = past_health_data.deaths[0]
 
-        initial_population = population_data.population_size - initial_deaths
-        initial_susceptible = initial_population - (initial_confirmed_cases +
-                                                    initial_recovered)
+        initial_susceptible = (
+            population_data.population_size -
+            (initial_confirmed_cases + initial_recovered + initial_deaths))
 
         forecast_length = len(future_policy_data.lockdown)
         prediction = integrate.solve_ivp(
-            SIR.differential_equations,
+            self.differential_equations,
             t_span=(0, forecast_length),
             t_eval=np.arange(forecast_length),
             y0=(initial_susceptible,
                 initial_confirmed_cases,
-                initial_recovered),
-            args=(self.params['beta'], self.params['gamma']))
+                initial_recovered,
+                initial_deaths),
+            args=self.parameter_config.flatten(self.params))
 
         (_,
          predicted_infected,
-         predicted_recovered) = prediction.y
+         predicted_recovered,
+         predicted_deaths) = prediction.y
 
         return data.HealthData(
             confirmed_cases=predicted_infected,
             recovered=predicted_recovered,
-            deaths=np.ones(forecast_length) * initial_deaths)
+            deaths=predicted_deaths)

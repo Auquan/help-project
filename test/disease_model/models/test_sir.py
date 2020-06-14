@@ -1,4 +1,6 @@
 """Test the sir module."""
+from numpy import testing
+
 from help_project.src.disease_model import data
 from help_project.src.disease_model.models import sir
 
@@ -13,6 +15,10 @@ def test_predict_with_no_cases():
     sir_model.set_params({
         'beta': 2,
         'gamma': 0.1,
+        'b': 0,
+        'mu': 0,
+        'mu_i': 0,
+        'cfr': 0,
     })
 
     health_data = data.HealthData(
@@ -47,6 +53,10 @@ def test_predict_with_some_cases():
     sir_model.set_params({
         'beta': 2,
         'gamma': 0.1,
+        'b': 0,
+        'mu': 0,
+        'mu_i': 0,
+        'cfr': 0,
     })
 
     health_data = data.HealthData(
@@ -80,6 +90,10 @@ def test_fit():
     ground_truth_params = {
         'beta': 2,
         'gamma': 0.1,
+        'b': 0,
+        'mu': 0,
+        'mu_i': 0.05,
+        'cfr': 0.1,
     }
     ground_truth_model = sir.SIR()
     ground_truth_model.set_params(ground_truth_params)
@@ -99,5 +113,8 @@ def test_fit():
                   ground_truth_predictions,
                   policy)
 
-    # An approximate match would also be fine here.
-    assert sir_model.params == ground_truth_params
+    # Verify that these are approximately the same
+    testing.assert_array_almost_equal(
+        sir_model.parameter_config.flatten(sir_model.params),
+        sir_model.parameter_config.flatten(ground_truth_params),
+        decimal=1)
