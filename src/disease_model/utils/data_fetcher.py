@@ -67,8 +67,8 @@ class DataFetcher():
             self.confirmed_cases['zone'] == country)])
         recovered = clean_df(self.recovered_cases[(
             self.recovered_cases['zone'] == country)])
-        deaths = clean_df(self.recovered_cases[(
-            self.recovered_cases['zone'] == country)])
+        deaths = clean_df(self.deaths[(
+            self.deaths['zone'] == country)])
         return data.HealthData(confirmed_cases=confirmed_cases,
                                recovered=recovered,
                                deaths=deaths)

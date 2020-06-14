@@ -153,9 +153,9 @@ class SIR(base_model.BaseDiseaseModel):
                 'Model params not set (%s). '
                 'Fit the model or set them manually' % missing_params)
 
-        initial_confirmed_cases = past_health_data.confirmed_cases[0]
-        initial_recovered = past_health_data.recovered[0]
-        initial_deaths = past_health_data.deaths[0]
+        initial_confirmed_cases = past_health_data.confirmed_cases[-1]
+        initial_recovered = past_health_data.recovered[-1]
+        initial_deaths = past_health_data.deaths[-1]
 
         initial_susceptible = (
             population_data.population_size -
