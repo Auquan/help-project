@@ -222,7 +222,6 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
              infected_unreported_up -
              df_conf.iloc[0]) /
             2)
-        ccfr = 0.04
         res = optimize.differential_evolution(
             resid_seir_global,
             bounds=[
@@ -251,7 +250,7 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
                 df_death,
                 initial_time,
                 0),
-            workers=-1, updating='deferred')  # In[238]:
+            workers=-1, updating='deferred')
 
         susceptible, exposed, infected_unreported, \
             infected_reported, deaths, cured, cured_unreported, _ = \
@@ -296,24 +295,24 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
                        self.df_conf, self.df_reco, self.df_death, self.params['initial_time'], len(future_policy_data),
                        generating_curve=True)
 
-        # dates = pd.date_range(
-        #     start=self.df_death.index[-1], periods=len(ir_long))
+        dates = pd.date_range(
+            start=self.df_death.index[-1], periods=len(ir_long))
         # final_df = pd.DataFrame()
         # final_df['DATE'] = dates
         # final_df['Deaths'] = pd.Series(d_long)
         # final_df['Confirmed Infections'] = pd.Series(ir_long + c_long + d_long)
         # final_df['Active Infections'] = pd.Series(ir_long)
         # return final_df
-        index = pd.Series(future_policy_data.lockdown).index
+        # index = pd.Series(future_policy_data.lockdown).index
         return data.HealthData(
             # TODO (Why are these indices different)
             confirmed_cases=pd.Series(
-                index=index,
-                data=ir_long[-len(future_policy_data):]),
+                index=dates,
+                data=(ir_long+c_long+d_long)),
             recovered=pd.Series(
-                index=index,
-                data=c_long[:len(future_policy_data)]),
+                index=dates,
+                data=c_long),
             deaths=pd.Series(
-                index=index,
-                data=d_long[:len(future_policy_data)]),
+                index=dates,
+                data=d_long)
         )
