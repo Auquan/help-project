@@ -104,13 +104,15 @@ def test_predictions_match_policy_index():
     vector_policy = data.PolicyData(lockdown=[0, 0, 0])
     vector_predictions = sir_model.predict(
         population_data, health_data, vector_policy)
-    assert isinstance(vector_predictions.deaths, np.ndarray)
+    isinstance(vector_predictions, np.ndarray)
 
     series_policy = data.PolicyData(
-        lockdown=pd.Series(index=[0, 1, 2], data=[0, 0, 0]))
+        lockdown=pd.Series(index=['a', 'b', 'c'], data=[0, 0, 0]))
     series_predictions = sir_model.predict(
         population_data, health_data, series_policy)
-    assert isinstance(series_predictions.deaths, pd.Series)
+    print(series_predictions.deaths)
+    np.testing.assert_array_equal(
+        series_predictions.deaths.index, ['a', 'b', 'c'])
 
 
 def test_fit():

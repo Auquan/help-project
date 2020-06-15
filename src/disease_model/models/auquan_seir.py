@@ -174,13 +174,16 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
     def fit(self,
             population_data: data.PopulationData,
             health_data: data.HealthData,
-            policy_data: data.PolicyData):
+            policy_data: data.PolicyData) -> bool:
         """Fit the model to the given data.
 
         Args:
             population_data: Relevant data for the population of interest.
             health_data: Time-series of confirmed infections and deaths.
             policy_data: Time-series of lockdown policy applied.
+
+        Returns:
+            Whether the optimization was successful in finding a solution.
         """
         population = population_data.population_size
         df_conf = health_data.confirmed_cases
@@ -266,6 +269,7 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
             'startCu': cured_unreported[-1],
             'initial_time': initial_time
         }
+        return True
 
     def predict(self,
                 population_data: data.PopulationData,
@@ -289,7 +293,7 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
                        self.params['res'][4], self.params['res'][5],
                        self.params['startE'], .1 * self.params['startIu'],
                        self.params['startS'], self.params['startIu'], population_data.population_size,
-                       self.df_conf, self.df_reco, self.df_death, self.params['initial_time'], 150,
+                       self.df_conf, self.df_reco, self.df_death, self.params['initial_time'], len(future_policy_data),
                        generating_curve=True)
 
         # dates = pd.date_range(
@@ -300,8 +304,16 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
         # final_df['Confirmed Infections'] = pd.Series(ir_long + c_long + d_long)
         # final_df['Active Infections'] = pd.Series(ir_long)
         # return final_df
+        index = pd.Series(future_policy_data.lockdown).index
         return data.HealthData(
-            confirmed_cases=pd.Series(ir_long),
-            recovered=pd.Series(c_long),
-            deaths=pd.Series(d_long),
+            # TODO (Why are these indices different)
+            confirmed_cases=pd.Series(
+                index=index,
+                data=ir_long[-len(future_policy_data):]),
+            recovered=pd.Series(
+                index=index,
+                data=c_long[:len(future_policy_data)]),
+            deaths=pd.Series(
+                index=index,
+                data=d_long[:len(future_policy_data)]),
         )

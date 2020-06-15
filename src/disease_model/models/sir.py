@@ -182,14 +182,15 @@ class SIR(base_model.BaseDiseaseModel):
          predicted_deaths) = prediction.y
 
         if isinstance(future_policy_data.lockdown, pd.Series):
+            index = future_policy_data.lockdown.index
             predicted_infected = pd.Series(
-                index=future_policy_data.lockdown.index,
+                index=index,
                 data=predicted_infected)
             predicted_recovered = pd.Series(
-                index=future_policy_data.lockdown.index,
+                index=index,
                 data=predicted_recovered)
             predicted_deaths = pd.Series(
-                index=future_policy_data.lockdown.index,
+                index=index,
                 data=predicted_deaths)
         return data.HealthData(
             confirmed_cases=predicted_infected,

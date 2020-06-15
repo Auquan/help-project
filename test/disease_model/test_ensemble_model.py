@@ -58,10 +58,11 @@ def test_ensemble_model_runs_without_failure():
     country = 'India'
     population_data = fetcher.get_population_data(country)
     health_data = fetcher.get_health_data(country)
+    policy_data = data.PolicyData(lockdown=[0] * 10)
 
     model = ensemble_model.EnsembleModel()
     model.fit(population_data, health_data, None)
-    health_output = model.predict(population_data, health_data, None)
+    health_output = model.predict(population_data, health_data, policy_data)
     assert health_output is not None
     assert len(health_output.confirmed_cases) > 0
     assert len(health_output.recovered) > 0
