@@ -2,6 +2,7 @@
 from typing import Tuple
 
 import numpy as np
+import pandas as pd
 from scipy import integrate
 from scipy import optimize
 
@@ -180,6 +181,16 @@ class SIR(base_model.BaseDiseaseModel):
          predicted_recovered,
          predicted_deaths) = prediction.y
 
+        if isinstance(future_policy_data.lockdown, pd.Series):
+            predicted_infected = pd.Series(
+                index=future_policy_data.lockdown.index,
+                data=predicted_infected)
+            predicted_recovered = pd.Series(
+                index=future_policy_data.lockdown.index,
+                data=predicted_recovered)
+            predicted_deaths = pd.Series(
+                index=future_policy_data.lockdown.index,
+                data=predicted_deaths)
         return data.HealthData(
             confirmed_cases=predicted_infected,
             recovered=predicted_recovered,

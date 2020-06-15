@@ -258,14 +258,14 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
                        res['x'][7], res['x'][8],
                        population, df_conf, df_reco, df_death, initial_time, 0)
 
-        self.set_params({
+        self.params = {
             'res': res['x'],
             'startE': exposed[-1],
             'startS': susceptible[-1],
             'startIu': infected_unreported[-1],
             'startCu': cured_unreported[-1],
             'initial_time': initial_time
-        })
+        }
 
     def predict(self,
                 population_data: data.PopulationData,

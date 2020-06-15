@@ -1,5 +1,6 @@
 """Test the sir module."""
-from numpy import testing
+import numpy as np
+import pandas as pd
 
 from help_project.src.disease_model import data
 from help_project.src.disease_model.models import sir
@@ -32,7 +33,6 @@ def test_predict_with_no_cases():
         population_data, health_data, future_policy)
 
     # Dimensions must match the given policy
-    print(predictions)
     assert len(predictions.confirmed_cases) == expected_prediction_size
     assert len(predictions.recovered) == expected_prediction_size
     assert len(predictions.deaths) == expected_prediction_size
@@ -80,6 +80,39 @@ def test_predict_with_some_cases():
     assert all(predictions.deaths == 0)
 
 
+def test_predictions_match_policy_index():
+    """Test that the outputs have the correct format."""
+    population_data = data.PopulationData(
+        population_size=1e6,
+        demographics=None,
+    )
+    sir_model = sir.SIR()
+    sir_model.set_params({
+        'beta': 2,
+        'gamma': 0.1,
+        'b': 0,
+        'mu': 0,
+        'mu_i': 0,
+        'cfr': 0,
+    })
+    health_data = data.HealthData(
+        confirmed_cases=[100],
+        recovered=[0],
+        deaths=[0],
+    )
+
+    vector_policy = data.PolicyData(lockdown=[0, 0, 0])
+    vector_predictions = sir_model.predict(
+        population_data, health_data, vector_policy)
+    assert isinstance(vector_predictions.deaths, np.ndarray)
+
+    series_policy = data.PolicyData(
+        lockdown=pd.Series(index=[0, 1, 2], data=[0, 0, 0]))
+    series_predictions = sir_model.predict(
+        population_data, health_data, series_policy)
+    assert isinstance(series_predictions.deaths, pd.Series)
+
+
 def test_fit():
     """Test that the fit function obtains sensible params."""
     population_data = data.PopulationData(
@@ -114,7 +147,7 @@ def test_fit():
                   policy)
 
     # Verify that these are approximately the same
-    testing.assert_array_almost_equal(
+    np.testing.assert_array_almost_equal(
         sir_model.parameter_config.flatten(sir_model.params),
         sir_model.parameter_config.flatten(ground_truth_params),
         decimal=1)
