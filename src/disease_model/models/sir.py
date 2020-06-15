@@ -95,11 +95,14 @@ class SIR(base_model.BaseDiseaseModel):
         """
         model = SIR(self.parameter_config)
         model.set_params(params)
-        predictions = model.predict(population_data, health_data, policy_data)
+        starting_health_data = health_data[[0]]
+        expected_health_data = health_data[1:]
+        predictions = model.predict(
+            population_data, starting_health_data, policy_data[1:])
         deltas = [
-            predictions.confirmed_cases - health_data.confirmed_cases,
-            predictions.recovered - health_data.recovered,
-            predictions.deaths - health_data.deaths,
+            predictions.confirmed_cases - expected_health_data.confirmed_cases,
+            predictions.recovered - expected_health_data.recovered,
+            predictions.deaths - expected_health_data.deaths,
         ]
         return sum([np.square(d).mean() for d in deltas])
 

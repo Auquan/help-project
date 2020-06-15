@@ -88,11 +88,11 @@ def test_fit():
     )
 
     ground_truth_params = {
-        'beta': 2,
+        'beta': 0.5,
         'gamma': 0.1,
         'b': 0,
         'mu': 0,
-        'mu_i': 0.05,
+        'mu_i': 0.1,
         'cfr': 0.1,
     }
     ground_truth_model = sir.SIR()
@@ -103,7 +103,7 @@ def test_fit():
         recovered=[0],
         deaths=[0],
     )
-    expected_prediction_size = 50
+    expected_prediction_size = 100
     policy = data.PolicyData(lockdown=[0] * expected_prediction_size)
     ground_truth_predictions = ground_truth_model.predict(
         population_data, initial_health_data, policy)
