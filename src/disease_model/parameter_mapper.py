@@ -4,7 +4,7 @@ import datetime as dt
 import pandas as pd
 from sklearn.cluster import KMeans
 from help_project.src.exitstrategies import interface
-import help_project.src.disease_model.models.auquan_seir as seir
+from help_project.src.disease_model.models import auquan_seir
 from help_project.src.disease_model.utils import data_fetcher
 
 
@@ -39,7 +39,7 @@ class ParameterMapper:
             all_policies.append(self.strategies[key])
             for i in range(len(self.strategies[key])):
                 date = self.strategies[key].index[i]
-                health_model = seir.AuquanSEIR(start_date=date)
+                health_model = auquan_seir.AuquanSEIR(start_date=date)
                 health_model.fit(
                     population_data=population_data,
                     health_data=health_data,
