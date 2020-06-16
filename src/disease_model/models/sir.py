@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from scipy import integrate
 from scipy import optimize
-
 from help_project.src.disease_model import base_model
 from help_project.src.disease_model import data
 from help_project.src.disease_model import parameter
@@ -138,7 +137,8 @@ class SIR(base_model.BaseDiseaseModel):
     def predict(self,
                 population_data: data.PopulationData,
                 past_health_data: data.HealthData,
-                future_policy_data: data.PolicyData) -> data.HealthData:
+                future_policy_data: data.PolicyData,
+                use_cached_mapper: bool = True) -> data.HealthData:
         """Get predictions.
 
         Args:

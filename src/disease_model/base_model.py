@@ -49,7 +49,8 @@ class BaseDiseaseModel:
     def predict(self,
                 population_data: data.PopulationData,
                 past_health_data: data.HealthData,
-                future_policy_data: data.PolicyData) -> data.HealthData:
+                future_policy_data: data.PolicyData,
+                use_cached_mapper: bool) -> data.HealthData:
         """Get predictions.
 
         Args:

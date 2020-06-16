@@ -1,9 +1,9 @@
 """Module for Auquan Infection Model."""
+
 import numpy as np
 import pandas as pd
 from scipy import integrate
 from scipy import optimize
-
 from help_project.src.disease_model import base_model
 from help_project.src.disease_model import data
 from help_project.src.disease_model import parameter_mapper
@@ -284,7 +284,6 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
                 future_policy_data: data.PolicyData,
                 use_cached_mapper: bool = True) -> data.HealthData:
         """Get predictions.
-
         Args:
             population_data: Relevant data for the population of interest.
             past_health_data: Time-series of confirmed infections and deaths.

@@ -38,7 +38,8 @@ class EnsembleModel(base_model.BaseDiseaseModel):
     def predict(self,
                 population_data: data.PopulationData,
                 past_health_data: data.HealthData,
-                future_policy_data: data.PolicyData) -> data.HealthData:
+                future_policy_data: data.PolicyData,
+                use_cached_mapper: bool = False) -> data.HealthData:
         """Get predictions.
 
         Args:
