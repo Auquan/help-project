@@ -256,7 +256,7 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
                 df_conf,
                 df_reco,
                 df_death,),
-            workers=7, updating='deferred')
+            workers=-1, updating='deferred')
 
         #can be used to see fit
         susceptible, exposed, infected_unreported, \
