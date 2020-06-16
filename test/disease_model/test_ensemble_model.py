@@ -59,9 +59,9 @@ def test_ensemble_model_runs_without_failure():
     country = 'India'
     population_data = fetcher.get_population_data(country)
     health_data = fetcher.get_health_data(country)
-    lockdown_vector = list(interface.ExitStrategies().get_exit_strategies().values())[0].values
+    lockdown_vector = list(
+        interface.ExitStrategies().get_exit_strategies().values())[0].values
     policy_data = data.PolicyData(lockdown=[0.2] * lockdown_vector.shape[1])
-
     model = ensemble_model.EnsembleModel()
     model.fit(population_data, health_data, None)
     health_output = model.predict(population_data, health_data, policy_data)

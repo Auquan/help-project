@@ -258,7 +258,7 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
                 df_death,),
             workers=-1, updating='deferred')
 
-        #can be used to see fit
+        # can be used to see fit
         susceptible, exposed, infected_unreported, \
             _, _, _, cured_unreported, _ = \
             setup_seir(res['x'][0], res['x'][1], res['x'][2],
@@ -281,7 +281,8 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
     def predict(self,
                 population_data: data.PopulationData,
                 past_health_data: data.HealthData,
-                future_policy_data: data.PolicyData) -> data.HealthData:
+                future_policy_data: data.PolicyData,
+                use_cached_mapper: bool = True) -> data.HealthData:
         """Get predictions.
 
         Args:
@@ -298,7 +299,7 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
 
         # fit the parameter mapper
         lockdown_mapper = parameter_mapper.ParameterMapper()
-        lockdown_mapper.fit()
+        lockdown_mapper.fit(use_cached_mapper=use_cached_mapper)
         # get new params
         lockdown_params = lockdown_mapper.map(future_policy_data.lockdown)
 
