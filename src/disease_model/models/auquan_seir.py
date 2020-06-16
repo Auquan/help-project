@@ -6,24 +6,21 @@ from scipy import optimize
 
 from help_project.src.disease_model import base_model
 from help_project.src.disease_model import data
+from help_project.src.disease_model import parameter_mapper
 
 
-def seir_deriv(
-        initial_y,
-        intial_t,
-        population,
-        beta1,
-        beta2,
-        alpha,
-        delta,
-        zeta,
-        ccfr):
-    """Differential equations for the model."""
+def seir_deriv(*params):
+    """
+    Differential equations for the model.
+    """
+
+    initial_y, _, population, \
+        beta1, beta2, alpha, delta, zeta, ccfr = params
     incubation_period = 5
     eta = 1 / 14
     epsilon = (1 / incubation_period) - alpha
     susceptible, exposed, infected_unreported, \
-        infected_reported, deaths, cured, cured_unreported = initial_y
+        infected_reported, _, _, _ = initial_y
     ds_dt = (-beta1 * susceptible * infected_unreported / population) - \
         (beta2 * susceptible * infected_reported / population)
     de_dt = (beta1 * susceptible * infected_unreported / population) + \
@@ -39,29 +36,25 @@ def seir_deriv(
 
 
 def setup_seir(
-        beta1,
-        beta2,
-        alpha,
-        delta,
-        zeta,
-        ccfr,
-        exposed0,
-        cured_unreported0,
-        susceptible0,
-        infected_unreported0,
+        *params,
         population,
         df_conf,
         df_reco,
         df_death,
-        initial_time,
         forward,
         generating_curve=False):
-    """Tries to integrate the SEIR curves."""
+    """
+    Tries to integrate the SEIR curves.
+    """
+
+    beta1, beta2, alpha, delta, zeta, ccfr, \
+        exposed0, cured_unreported0, susceptible0, infected_unreported0 = params
+
     if generating_curve:
         deaths0 = df_death.iloc[-1]
-        try:
+        if len(df_conf) > 14:
             cured0 = max(df_reco.iloc[-1], .15 * (df_conf.iloc[-14] - deaths0))
-        except BaseException:
+        else:
             cured0 = df_reco.iloc[-1]
         infected_reported0 = df_conf.iloc[-1] - cured0 - deaths0
         # susceptible0 = population - exposed0- infected_unreported0- \
@@ -108,23 +101,21 @@ def setup_seir(
 
 def resid_seir(
         params,
-        population,
-        df_conf,
-        df_reco,
-        df_death,
-        initial_time,
-        ccfr):
+        *population_params):
     """
     This function is used to fit the observed data with
     the curves generated so as to estimate the parameters
     """
-    susceptible, exposed, infected_unreported, \
-        infected_reported, deaths, cured, cured_unreported0, _ = \
+    population, df_conf, df_reco, \
+        df_death, = population_params
+    _, _, _, \
+        infected_reported, deaths, cured, _, _ = \
         setup_seir(params[0], params[1], params[2], params[3], params[4],
                    # params[9],
                    params[5], params[6], .1 * \
                    params[8], params[7], params[8],
-                   population, df_conf, df_reco, df_death, initial_time, ccfr, 0)
+                   population=population, df_conf=df_conf, df_reco=df_reco, \
+                   df_death=df_death, forward=0)
     true_infected_reported = df_conf - df_reco - df_death
     true_deaths = df_death
     fit_days = len(true_deaths)
@@ -136,16 +127,16 @@ def resid_seir(
 
 def resid_seir_global(params, *args):
     """Residue function for global optimization."""
-    population, df_conf, df_reco, df_death, initial_time, ccfr = args
-    susceptible, exposed, infected_unreported, \
-        infected_reported, deaths, cured, cured_unreported0, _ = \
+    population, df_conf, df_reco, df_death = args
+    _, _, _, \
+        infected_reported, deaths, cured, _, _ = \
         setup_seir(params[0], params[1], params[2], params[3], params[4],
                    params[5], params[6], .1 *
                    params[8], params[7], params[8],
-                   population, df_conf, df_reco, df_death, initial_time, ccfr, 0)
+                   population=population, df_conf=df_conf,
+                   df_reco=df_reco, df_death=df_death, forward=0)
     true_infected_reported = df_conf - df_reco - df_death
     true_deaths = df_death
-    true_cured = df_reco
     fit_days = len(true_deaths)
     return np.sum(np.nan_to_num(np.array((
         # np.abs(((infected_reported)[:len(true_infected_reported)] -
@@ -160,6 +151,7 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
     """Class for Auquan's Infection Model."""
 
     def __init__(self,
+                 start_date=None,
                  fit_on_days: int = 14,
                  fit_from_last_death: bool = False):
         """Initialize the Auquan model.
@@ -170,6 +162,11 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
         """
         self.fit_on_days = fit_on_days
         self.fit_from_last_death = fit_from_last_death
+        self.start_date = start_date
+        self.df_conf = None
+        self.df_reco = None
+        self.df_death = None
+        super().__init__()
 
     def fit(self,
             population_data: data.PopulationData,
@@ -186,9 +183,20 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
             Whether the optimization was successful in finding a solution.
         """
         population = population_data.population_size
+
         df_conf = health_data.confirmed_cases
         df_reco = health_data.recovered
         df_death = health_data.deaths
+
+        if self.start_date is not None:
+            df_conf = df_conf.loc[df_conf.index > self.start_date]
+            df_conf = df_conf.iloc[:14]
+
+            df_reco = df_reco.loc[df_reco.index > self.start_date]
+            df_reco = df_reco.iloc[:14]
+
+            df_death = df_death.loc[df_death.index > self.start_date]
+            df_death = df_death.iloc[:14]
 
         if self.fit_from_last_death:
             fit_on_days = len(df_death[df_death > 0])
@@ -247,18 +255,18 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
                 population,
                 df_conf,
                 df_reco,
-                df_death,
-                initial_time,
-                0),
-            workers=-1, updating='deferred')
+                df_death,),
+            workers=7, updating='deferred')
 
+        #can be used to see fit
         susceptible, exposed, infected_unreported, \
-            infected_reported, deaths, cured, cured_unreported, _ = \
+            _, _, _, cured_unreported, _ = \
             setup_seir(res['x'][0], res['x'][1], res['x'][2],
                        res['x'][3], res['x'][4],
                        res['x'][5], res['x'][6], .1 * res['x'][8],
                        res['x'][7], res['x'][8],
-                       population, df_conf, df_reco, df_death, initial_time, 0)
+                       population=population, df_conf=df_conf,
+                       df_reco=df_reco, df_death=df_death, forward=0)
 
         self.params = {
             'res': res['x'],
@@ -285,14 +293,30 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
             Predicted time-series of health data matching the length of the
             given policy.
         """
-        s_long, e_long, iu_long, ir_long, \
-            d_long, c_long, cu_long, _ = \
-            setup_seir(self.params['res'][0], self.params['res'][1],
-                       self.params['res'][2], self.params['res'][3],
+
+        # Change params according to lockdown policy
+
+        # fit the parameter mapper
+        lockdown_mapper = parameter_mapper.ParameterMapper()
+        lockdown_mapper.fit()
+        # get new params
+        lockdown_params = lockdown_mapper.map(future_policy_data.lockdown)
+
+        # change beta1, beta2, alpha
+        beta1 = lockdown_params['res'][0]
+        beta2 = lockdown_params['res'][1]
+        alpha = lockdown_params['res'][2]
+
+        _, _, _, ir_long, \
+            d_long, c_long, _, _ = \
+            setup_seir(beta1, beta2,
+                       alpha, self.params['res'][3],
                        self.params['res'][4], self.params['res'][5],
                        self.params['startE'], .1 * self.params['startIu'],
-                       self.params['startS'], self.params['startIu'], population_data.population_size,
-                       self.df_conf, self.df_reco, self.df_death, self.params['initial_time'], len(future_policy_data),
+                       self.params['startS'], self.params['startIu'],
+                       population=population_data.population_size,
+                       df_conf=self.df_conf, df_reco=self.df_reco, df_death=self.df_death,
+                       forward=len(future_policy_data),
                        generating_curve=True)
 
         dates = pd.date_range(
@@ -308,7 +332,7 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
             # TODO (Why are these indices different)
             confirmed_cases=pd.Series(
                 index=dates,
-                data=(ir_long+c_long+d_long)),
+                data=(ir_long + c_long + d_long)),
             recovered=pd.Series(
                 index=dates,
                 data=c_long),

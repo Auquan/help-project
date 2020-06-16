@@ -6,6 +6,7 @@ from help_project.src.disease_model import base_model
 from help_project.src.disease_model import data
 from help_project.src.disease_model import ensemble_model
 from help_project.src.disease_model.utils import data_fetcher
+from help_project.src.exitstrategies import interface
 
 
 def test_ensemble_model_fits_all_submodels():
@@ -58,7 +59,8 @@ def test_ensemble_model_runs_without_failure():
     country = 'India'
     population_data = fetcher.get_population_data(country)
     health_data = fetcher.get_health_data(country)
-    policy_data = data.PolicyData(lockdown=[0] * 10)
+    lockdown_vector = list(interface.ExitStrategies().get_exit_strategies().values())[0].values
+    policy_data = data.PolicyData(lockdown=[0.2] * lockdown_vector.shape[1])
 
     model = ensemble_model.EnsembleModel()
     model.fit(population_data, health_data, None)

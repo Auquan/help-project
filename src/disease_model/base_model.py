@@ -5,7 +5,6 @@ from typing import Sequence
 from typing import Union
 
 from help_project.src.disease_model import data
-from help_project.src.disease_model import parameter
 
 
 class BaseDiseaseModel:
