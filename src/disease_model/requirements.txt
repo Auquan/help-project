@@ -3,3 +3,4 @@ scipy>=1.4.1
 jupyter
 numpy
 pandas
+sklearn
