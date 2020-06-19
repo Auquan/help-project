@@ -150,6 +150,8 @@ class SIR(base_model.BaseDiseaseModel):
             Predicted time-series of health data matching the length of the
             given policy.
         """
+        # Disable pycharm warning
+        # pylint: disable=too-many-locals
         missing_params = [param.name for param in self.parameter_config
                           if param.name not in self.params]
         if missing_params:
