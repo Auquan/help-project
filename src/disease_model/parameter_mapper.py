@@ -29,6 +29,8 @@ class ParameterMapper:
 
     def fit(self, use_cached_mapper=False):
         """Fit the parameter mapper for a particular model."""
+        # Disable pycharm warning
+        # pylint: disable=too-many-locals
         dir_path = path.dirname(path.realpath(__file__))
         if use_cached_mapper and path.exists(
                 dir_path + '/data/mapper.pickle'):

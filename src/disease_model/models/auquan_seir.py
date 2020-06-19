@@ -13,7 +13,8 @@ def seir_deriv(*params):
     """
     Differential equations for the model.
     """
-
+    # Disable pycharm warning
+    # pylint: disable=too-many-locals
     initial_y, _, population, \
         beta1, beta2, alpha, delta, zeta, ccfr = params
     incubation_period = 5
@@ -46,7 +47,8 @@ def setup_seir(
     """
     Tries to integrate the SEIR curves.
     """
-
+    # Disable pycharm warning
+    # pylint: disable=too-many-locals
     beta1, beta2, alpha, delta, zeta, ccfr, \
         exposed0, cured_unreported0, susceptible0, infected_unreported0 = params
 
@@ -98,31 +100,6 @@ def setup_seir(
     return susceptible, exposed, infected_unreported, \
         infected_reported, deaths, cured, cured_unreported0, forward_period
 
-
-def resid_seir(
-        params,
-        *population_params):
-    """
-    This function is used to fit the observed data with
-    the curves generated so as to estimate the parameters
-    """
-    population, df_conf, df_reco, \
-        df_death, = population_params
-    _, _, _, \
-        infected_reported, deaths, cured, _, _ = \
-        setup_seir(params[0], params[1], params[2], params[3], params[4],
-                   # params[9],
-                   params[5], params[6], .1 * \
-                   params[8], params[7], params[8],
-                   population=population, df_conf=df_conf, df_reco=df_reco, \
-                   df_death=df_death, forward=0)
-    true_infected_reported = df_conf - df_reco - df_death
-    true_deaths = df_death
-    fit_days = len(true_deaths)
-    return np.nan_to_num(np.array((
-        .3 * np.abs(((infected_reported + deaths + cured)[:len(true_infected_reported)] -
-                     df_conf)) + np.abs((deaths[len(true_deaths) - fit_days:len(true_deaths)] -
-                                         true_deaths.iloc[-fit_days:])) + 0)).astype(float))
 
 
 def resid_seir_global(params, *args):
@@ -182,6 +159,9 @@ class AuquanSEIR(base_model.BaseDiseaseModel):
         Returns:
             Whether the optimization was successful in finding a solution.
         """
+
+        # Disable pycharm warning
+        # pylint: disable=too-many-locals
         population = population_data.population_size
 
         df_conf = health_data.confirmed_cases
